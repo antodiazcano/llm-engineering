@@ -1,2 +1,0 @@
-class LinkedInCrawler:
-    pass

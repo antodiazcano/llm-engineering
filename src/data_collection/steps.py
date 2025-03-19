@@ -2,14 +2,13 @@
 Steps of the pipeline.
 """
 
-from urllib.parse import urlparse
+from typing import Any
 from loguru import logger
 from zenml import get_step_context, step
 from tqdm import tqdm  # type:ignore
 from pymongo import MongoClient
 
 from src.data_collection.crawlers.dispatcher import select_crawler
-from src.data_collection.crawlers.crawlers import LinkedInCrawler, MediumCrawler
 
 
 CLIENT: MongoClient = MongoClient("localhost", 27017)
@@ -28,26 +27,19 @@ def get_or_create_user(user_full_name: str) -> str:
     first_name, last_name = _split_user_full_name(user_full_name)
     _get_or_create(first_name=first_name, last_name=last_name)
     step_context = get_step_context()
-    step_context.add_output_metadata(
-        output_name="output",
-        metadata=_get_metadata_user(
-            user_full_name, first_name, last_name
-        ),  # type:ignore
-    )
+    metadata = _get_metadata_user(user_full_name, first_name, last_name)
+    step_context.add_output_metadata(metadata=metadata)  # type: ignore
     return user_full_name
 
 
-def _split_user_full_name(user: str | None) -> tuple[str, str]:
+def _split_user_full_name(user: str) -> tuple[str, str]:
     """
     Splits the name into name and surname.
     """
 
-    if user is None:
-        raise ValueError("User name is empty")
-
     name_tokens = user.split(" ")
     if len(name_tokens) == 0:
-        raise ValueError("User name is empty")
+        return "Unknown", "Unknown"
     if len(name_tokens) == 1:
         first_name, last_name = name_tokens[0], ""
     else:
@@ -88,7 +80,7 @@ def _get_or_create(first_name: str, last_name: str) -> None:
 
 
 @step
-def crawl_links(user: str, links: list[str]) -> list[str]:
+def crawl_links(user: str, links: list[str], scroll_limit: int = 10) -> list[str]:
     """
     Obtains information from all links provided.
     """
@@ -98,18 +90,37 @@ def crawl_links(user: str, links: list[str]) -> list[str]:
     successful_crawls = 0
 
     for link in tqdm(links):
-        crawler = select_crawler(link)
+        logger.info(f"Starting scrapping article: {link}")
+        domain, crawler = select_crawler(user, link, scroll_limit=scroll_limit)
         successful_crawl, crawled_domain = crawler.extract(link)
         successful_crawls += successful_crawl
-        metadata = _get_metadata_links(metadata, crawled_domain, successful_crawl)
+        if successful_crawl:
+            _crawl_link(user, link, crawled_domain)
+        metadata = _get_metadata_links(
+            metadata,  # type: ignore
+            domain,  # type: ignore
+            successful_crawl,
+        )
 
     step_context = get_step_context()
     step_context.add_output_metadata(
-        output_name="crawled_links", metadata=metadata  # type: ignore
+        metadata=metadata,  # type: ignore
     )
     logger.info(f"Successfully crawled {successful_crawls} / {len(links)} links.")
 
     return links
+
+
+def _crawl_link(user: str, link: str, crawled_domain: dict[str, str | Any]) -> None:
+    instance = DOCUMENTS.find_one({"link": link})
+    print(f"Instance: {instance}")
+    if instance:
+        print(":(")
+        logger.info(f"Link: {link}, of {user} already in the DB.")
+    else:
+        print(":)")
+        DOCUMENTS.insert_one(crawled_domain)
+        logger.info(f"Link: {link}, of {user}.")
 
 
 def _get_metadata_links(metadata: dict, domain: str, successful_crawl: bool) -> dict:
