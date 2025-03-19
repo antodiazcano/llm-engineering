@@ -1,14 +1,32 @@
-from bs4 import BeautifulSoup  # type: ignore
+"""
+This script contains all the classes for the Crawlers of different platforms.
+"""
+
+from typing import Any
 import time
+from bs4 import BeautifulSoup  # type: ignore
 import numpy as np
 from selenium import webdriver
-from typing import Any
 
 
 class BaseCrawler:
-    def __init__(self, author: str, url: str, scroll_limit: int = 10) -> None:
-        options = webdriver.ChromeOptions()
+    """
+    Base class of the Crawlers.
+    """
 
+    def __init__(self, author: str, url: str, scroll_limit: int = 10) -> None:
+        """
+        Constructor of the class. It has some commented options, which are the standard
+        ones, but sometimes they give problems.
+
+        Parameters
+        ----------
+        author       : Author to scrape.
+        url          : Url to scrape.
+        scroll_limit : Scroll limit for scraping.
+        """
+
+        options = webdriver.ChromeOptions()
         # options.add_argument("--no-sandbox")
         # options.add_argument("--headless=new")
         # options.add_argument("--disable-dev-shm-usage")
@@ -32,14 +50,18 @@ class BaseCrawler:
         )
 
     def scroll_page(self) -> None:
-        """Scroll through the LinkedIn page based on the scroll limit."""
+        """
+        Scroll through the LinkedIn page based on the scroll limit.
+        """
+
         current_scroll = 0
         last_height = self.driver.execute_script("return document.body.scrollHeight")
+
         while True:
             self.driver.execute_script(
                 "window.scrollTo(0, document.body.scrollHeight);"
             )
-            self._wait()
+            self.wait()
             new_height = self.driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height or (
                 self.scroll_limit and current_scroll >= self.scroll_limit
@@ -48,17 +70,44 @@ class BaseCrawler:
             last_height = new_height
             current_scroll += 1
 
-    def _wait(self) -> None:
+    def wait(self) -> None:
+        """
+        Waits a random time simulating a person.
+        """
+
         time.sleep(max(1 + np.random.uniform(1), np.random.normal(2, 2)))
 
 
 class MediumCrawler(BaseCrawler):
+    """
+    Specific Crawler for Medium articles.
+    """
+
     def __init__(self, author: str, url: str, scroll_limit: int = 10) -> None:
+        """
+        Constructor of the class. It has some commented options, which are the standard
+        ones, but sometimes they give problems.
+
+        Parameters
+        ----------
+        author       : Author to scrape.
+        url          : Url to scrape.
+        scroll_limit : Scroll limit for scraping.
+        """
+
         super().__init__(author, url, scroll_limit=scroll_limit)
 
-    def extract(self, link: str) -> tuple[bool, dict[str, str | Any]]:
+    def extract(self) -> tuple[bool, dict[str, str | Any]]:
+        """
+        Tries to scrape the given link.
+
+        Returns
+        -------
+        If the scraping was successful or not and dict with its data.
+        """
+
         try:
-            self.driver.get(link)
+            self.driver.get(self.url)
             self.scroll_page()
 
             soup = BeautifulSoup(self.driver.page_source, "html.parser")
@@ -66,17 +115,17 @@ class MediumCrawler(BaseCrawler):
             subtitle = soup.find_all("h2", class_="pw-subtitle-paragraph")
 
             data = {
-                "Title": title[0].string if title else None,
-                "Subtitle": subtitle[0].string if subtitle else None,
+                "Title": title[0].string if title else None,  # type: ignore
+                "Subtitle": subtitle[0].string if subtitle else None,  # type: ignore
                 "Content": soup.get_text(),
             }
 
             self.driver.close()
 
             return True, {
-                "platfrom": "medium",
+                "platform": "medium",
                 "content": data,
-                "link": link,
+                "link": self.url,
                 "author": self.author,
             }
         except Exception as e:

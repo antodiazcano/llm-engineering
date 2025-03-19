@@ -11,6 +11,11 @@ from src.data_collection.steps import get_or_create_user, crawl_links
 def digital_data_etl(user_full_name: str, links: list[str]) -> None:
     """
     Pipeline of the data collection.
+
+    Parameters
+    ----------
+    user_full_name : Name of the user.
+    links          : Links to scrape.
     """
 
     user_full_name = get_or_create_user(user_full_name)
