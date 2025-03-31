@@ -2,7 +2,16 @@ Complete LLM project: recollect data, store it into a db, use RAG and fine-tune 
 
 Poner que hay que instalar mongo db y comandos del vídeo de neural nine
 
-Si falla al iniciar MongoDB en Linux: https://stackoverflow.com/questions/48092353/failed-to-start-mongod-service-unit-mongod-service-not-found
+iniciar mongodb
+
+    mongosh
+    sudo systemctl unmask mongod
+    sudo service mongod start
+
+
+para iniciar zenml es
+
+    zenml login --local
 
 Si da error al correr ZenML:
     

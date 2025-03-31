@@ -4,7 +4,7 @@ This script contains all the classes for the Crawlers of different platforms.
 
 from typing import Any
 import time
-from bs4 import BeautifulSoup  # type: ignore
+from bs4 import BeautifulSoup
 import numpy as np
 from selenium import webdriver
 

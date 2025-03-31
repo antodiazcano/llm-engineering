@@ -1,0 +1,4 @@
+,instructions,answers
+2,Describe the skills involved in constructing a complete LLM system from inception to deployment.,"You will learn how to architect and build a real-world LLM system from start to finish, from data collection to deployment. This involves learning how to design, train, and deploy a production-ready LLM twin powered by LLMs and vector DBs."
+10,Describe the focus of the initial project lesson.,"In the first lesson, we will present the project you will build: your production-ready LLM Twin AI replica. This initial stage sets the foundation by introducing the core concept and the end goal."
+14,Describe the subsequent steps after the initial system design presentation.,"In the following lessons, we will examine each component's code in detail. We will focus on learning how to implement each part and deploy it effectively to AWS SageMaker, building upon the established system design."

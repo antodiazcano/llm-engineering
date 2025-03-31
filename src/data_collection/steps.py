@@ -6,7 +6,7 @@ in some cases there is a 'dummy' return.
 from typing import Any
 from loguru import logger
 from zenml import get_step_context, step
-from tqdm import tqdm  # type:ignore
+from tqdm import tqdm
 from pymongo import MongoClient
 
 from src.data_collection.crawlers.dispatcher import select_crawler
