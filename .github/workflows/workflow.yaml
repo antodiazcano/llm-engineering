@@ -13,6 +13,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
+        
+      - name: Install dependencies
+        run: |
+          pip install black mypy pylint complexipy flake8 ruff
 
       - name: Style and Typing
         uses: ./.github/actions/lint
