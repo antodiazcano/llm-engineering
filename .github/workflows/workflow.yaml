@@ -14,10 +14,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
       - name: Style and Typing
         uses: ./.github/actions/lint
 
