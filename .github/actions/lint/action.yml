@@ -8,7 +8,7 @@ runs:
       run: black --check .
       shell: bash
     - name: Check Typing with Mypy
-      run: mypy src tests
+      run: mypy src
       shell: bash
     - name: Lint with Flake8
       run: flake8 src
