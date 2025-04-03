@@ -16,10 +16,7 @@ jobs:
         
       - name: Install dependencies
         run: |
-          pip install black mypy pylint complexipy flake8 ruff pytest
+          pip install black mypy pylint complexipy flake8 ruff
 
       - name: Style and Typing
         uses: ./.github/actions/lint
-
-      - name: Tests
-        uses: ./.github/actions/test

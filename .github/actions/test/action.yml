@@ -1,6 +1,0 @@
-name: Tests
-
-runs:
-  using: composite
-
-  steps:
