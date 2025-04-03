@@ -4,6 +4,3 @@ runs:
   using: composite
 
   steps:
-    - name: Run tests
-      run: pytest .
-      shell: bash
