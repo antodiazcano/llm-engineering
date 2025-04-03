@@ -6,7 +6,6 @@ import re
 import os
 import json
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from pymongo import MongoClient
 import google.generativeai as genai
 from google.api_core.exceptions import ResourceExhausted
@@ -178,9 +177,7 @@ def generate_dataset(out_path: str = "data/datasets") -> None:
 
     # Save dfs
     df = pd.DataFrame({"instructions": instructions, "answers": answers})
-    df_train, df_test = train_test_split(df, test_size=0.2)
-    df_train.to_csv(f"{out_path}/df_train.csv")
-    df_test.to_csv(f"{out_path}/df_test.csv")
+    df.to_csv(f"{out_path}/df_sft.csv", index=False)
 
 
 if __name__ == "__main__":
