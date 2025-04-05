@@ -1,16 +1,17 @@
 """
-Script to perform fine-tuning in the LLM.
+Script to perform DPO in the LLM.
 """
 
 from typing import Any
-from datasets import Dataset, load_dataset
-from transformers import TextStreamer, TrainingArguments
-from trl import SFTTrainer
-from unsloth import FastLanguageModel, is_bfloat16_supported
+from datasets import load_dataset
+from datasets.formatting.formatting import LazyRow
+from transformers import TextStreamer
+from unsloth import FastLanguageModel, is_bfloat16_supported, PatchDPOTrainer
 from unsloth.chat_templates import get_chat_template
 from peft import PeftModel
+from trl import DPOConfig, DPOTrainer
 
-from src.sft.constants import (
+from src.sft.constants_dpo import (
     MODEL_NAME,
     MAX_SEQ_LENGTH,
     LOAD_IN_4_BIT,
@@ -29,6 +30,13 @@ from src.sft.constants import (
     OPTIM,
     LR_SCHEDULER_TYPE,
     WARMUP_STEPS,
+    PER_DEVICE_EVAL_BATCH_SIZE,
+    WEIGHT_DECAY,
+    BETA,
+    EVAL_STRATEGY,
+    EVAL_STEPS,
+    LOGGING_STEPS,
+    SEED,
 )
 
 
@@ -76,69 +84,69 @@ def finetune() -> tuple[Any, Any]:
     eos_token = tokenizer.eos_token
     print(f"Setting EOS_TOKEN to {eos_token}")
 
-    def format_samples_sft(examples: Dataset) -> dict[str, list[str]]:
+    def format_samples_dpo(example: LazyRow) -> dict[str, list[str]]:
         """
-        Function to include EOS token at the end of the instruction and output.
+        Function to format triplets to be available with the DPO training.
 
         Parameters
         ----------
-        examples : HF dataset.
+        examples : HF dataset row.
 
         Returns
         -------
         Modified text.
         """
 
-        text = []
+        example["prompt"] = ALPACA_TEMPLATE.format(example["prompt"])
+        example["rejected"] = example["rejected"] + eos_token
+        example["chosen"] = example["chosen"] + eos_token
 
-        for instruction, output in zip(
-            examples["instructions"], examples["answers"], strict=False
-        ):
-            message = ALPACA_TEMPLATE.format(instruction, output) + eos_token
-            text.append(message)
-
-        return {"text": text}
+        return {
+            "prompt": example["prompt"],
+            "rejected": example["rejected"],
+            "chosen": example["chosen"],
+        }
 
     # dataset = load_dataset("mlabonne/FineTome-Alpaca-100k")
-    dataset = load_dataset("csv", data_files="data/datasets/df_sft.csv", split="train")
+    dataset = load_dataset("csv", data_files="data/datasets/df_dpo.csv", split="train")
     print(f"Loaded dataset with {len(dataset)} samples.")
 
-    dataset = dataset.map(
-        format_samples_sft, batched=True, remove_columns=dataset.column_names
-    )
+    dataset = dataset.map(format_samples_dpo)
     dataset = dataset.train_test_split(test_size=TEST_SIZE)
 
     print("Training dataset example:")
     print(dataset["train"][0])
 
-    trainer = SFTTrainer(
+    PatchDPOTrainer()
+    trainer = DPOTrainer(
         model=model,
+        ref_model=None,
         tokenizer=tokenizer,
+        beta=BETA,
         train_dataset=dataset["train"],
         eval_dataset=dataset["test"],
-        dataset_text_field="text",
-        max_seq_length=MAX_SEQ_LENGTH,
-        dataset_num_proc=2,
-        packing=True,
-        args=TrainingArguments(
+        max_length=MAX_SEQ_LENGTH // 2,
+        max_prompt_length=MAX_SEQ_LENGTH // 2,
+        args=DPOConfig(
             learning_rate=LEARNING_RATE,
-            num_train_epochs=NUM_TRAIN_EPOCHS,
+            lr_scheduler_type=LR_SCHEDULER_TYPE,
             per_device_train_batch_size=PER_DEVICE_TRAIN_BATCH_SIZE,
+            per_device_eval_batch_size=PER_DEVICE_EVAL_BATCH_SIZE,
             gradient_accumulation_steps=GRADIENT_ACCUMULATION_STEPS,
+            num_train_epochs=NUM_TRAIN_EPOCHS,
             fp16=not is_bfloat16_supported(),
             bf16=is_bfloat16_supported(),
-            logging_steps=1,
             optim=OPTIM,
-            weight_decay=0.01,
-            lr_scheduler_type=LR_SCHEDULER_TYPE,
-            per_device_eval_batch_size=PER_DEVICE_TRAIN_BATCH_SIZE,
+            weight_decay=WEIGHT_DECAY,
             warmup_steps=WARMUP_STEPS,
             output_dir=OUTPUT_DIR,
+            eval_strategy=EVAL_STRATEGY,
+            eval_steps=EVAL_STEPS,
+            logging_steps=LOGGING_STEPS,
             report_to="comet_ml",
-            seed=0,
+            seed=SEED,
         ),
     )
-
     trainer.train()
 
     return model, tokenizer
@@ -174,7 +182,7 @@ def inference(
 def save_model(
     model: Any,
     tokenizer: Any,
-    output_dir: str = "data/models/sft",
+    output_dir: str = "data/models/dpo",
 ) -> None:
     """
     Saves the model.
@@ -191,7 +199,7 @@ def save_model(
     )  # "merged_16bit")
 
 
-def load_model(model_path: str = "data/models/sft") -> tuple[Any, Any]:
+def load_model(model_path: str = "data/models/dpo") -> tuple[Any, Any]:
     """
     Loads the fine-tuned model.
 
