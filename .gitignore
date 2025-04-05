@@ -163,4 +163,5 @@ cython_debug/
 #.idea/
 
 # Heavy files
-data/models
+data/models/sft
+data/models/dpo
