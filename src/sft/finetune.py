@@ -174,7 +174,7 @@ def inference(
 def save_model(
     model: Any,
     tokenizer: Any,
-    output_dir: str = "data/models",
+    output_dir: str = "data/models/sft",
 ) -> None:
     """
     Saves the model.
@@ -191,7 +191,7 @@ def save_model(
     )  # "merged_16bit")
 
 
-def load_model(model_path: str = "data/models") -> tuple[Any, Any]:
+def load_model(model_path: str = "data/models/sft") -> tuple[Any, Any]:
     """
     Loads the fine-tuned model.
 
