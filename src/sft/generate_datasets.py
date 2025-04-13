@@ -136,6 +136,7 @@ def _generate_sft_dataset(
     Extract:
     {answer}
     """
+    prompt = re.sub(r"[^\S\n]+", " ", prompt)  # delete more than one blanck space
 
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel("gemini-2.5-pro-exp-03-25")
@@ -206,6 +207,7 @@ def _generate_dpo_dataset(
     Extract:
     {extract}
     """
+    prompt = re.sub(r"[^\S\n]+", " ", prompt)  # delete more than one blanck space
 
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     model = genai.GenerativeModel("gemini-2.5-pro-exp-03-25")

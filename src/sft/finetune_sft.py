@@ -103,7 +103,6 @@ def finetune() -> tuple[Any, Any]:
     # dataset = load_dataset("mlabonne/FineTome-Alpaca-100k")
     dataset = load_dataset("csv", data_files="data/datasets/df_sft.csv", split="train")
     print(f"Loaded dataset with {len(dataset)} samples.")
-
     dataset = dataset.map(
         format_samples_sft, batched=True, remove_columns=dataset.column_names
     )
