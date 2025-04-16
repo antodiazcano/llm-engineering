@@ -107,26 +107,30 @@ def remove_emojis_and_non_ascii(text: str) -> str:
 
 @step
 def chunk_documents(
-    documents: list[dict], min_length: int = 100, max_length: int = 500
-) -> list[str]:
+    documents: list[dict],
+    authors: list[str],
+    min_length: int = 100,
+    max_length: int = 500,
+) -> list[tuple[str, str]]:
     """
-    Creates the chunks of the documents.
+    Creates the chunks of the documents and its associated authors.
 
     Parameters
     ----------
     documents  : Cleaned documents.
+    authors    : Author of each document.
     min_length : Minimum length of each chunk.
     max_length : Maximum length of each chunk.
 
     Returns
     -------
-    Chunks of the documents.
+    Chunks of the documents and its associated authors.
     """
 
     logger.info("Chunking documents...")
     chunks = []
 
-    for doc in documents:
+    for doc, author in zip(documents, authors):
         sentences = re.split(
             r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!)\s", doc["content"]["Content"]
         )  # separate text in sentences by points and ?
@@ -139,10 +143,10 @@ def chunk_documents(
                 current_chunk += sentence + " "
             else:
                 if len(current_chunk) >= min_length:
-                    chunks.append(current_chunk.strip())
+                    chunks.append((current_chunk.strip(), author))
                     current_chunk = sentence + " "
         if len(current_chunk) >= min_length:
-            chunks.append(current_chunk.strip())
+            chunks.append((current_chunk.strip(), author))
 
     step_context = get_step_context()
     step_context.add_output_metadata(metadata={})
@@ -167,10 +171,10 @@ def embed_chunks(chunks: list[str], model: str = "all-MiniLM-L6-v2") -> np.ndarr
 
     logger.info("Creating embeddings...")
     model = SentenceTransformer(model)  # type:ignore
-    embeddings = model.encode(chunks)  # type:ignore
+    embeddings = model.encode([chunk[0] for chunk in chunks])  # type:ignore
 
-    step_context = get_step_context()
-    step_context.add_output_metadata(metadata={})
+    # step_context = get_step_context()
+    # step_context.add_output_metadata(metadata={})
 
     save_to_vector_db(chunks, embeddings)  # type:ignore
     logger.info("Embeddings saved!")
@@ -207,6 +211,7 @@ def save_to_vector_db(chunks: list[str], embeddings: np.ndarray | None = None) -
     # )
     # print(qdrant_client.get_collections())
 
+    vector_size = 384
     qdrant_client.upsert(
         collection_name="llms",
         points=[
@@ -216,12 +221,13 @@ def save_to_vector_db(chunks: list[str], embeddings: np.ndarray | None = None) -
                     embeddings[i]
                     if embeddings is not None
                     else np.zeros(
-                        384,
+                        vector_size,
                     )
                 ),
                 "payload": {
                     "mode": "inference" if embeddings is not None else "train",
-                    "chunk": chunks[i],
+                    "chunk": chunks[i][0],
+                    "author": chunks[i][1],
                 },
             }
             for i in range(len(chunks))

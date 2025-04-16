@@ -6,7 +6,7 @@ and embeddings (for inference) into the vector db (5).
 
 from zenml import pipeline
 
-from src.rag.steps import (
+from src.rag_populate_db.steps import (
     load_raw_documents,
     clean_documents,
     chunk_documents,
@@ -26,7 +26,7 @@ def feature_engineering(authors: list[str]) -> None:
 
     raw_documents = load_raw_documents(authors)
     cleaned_documents = clean_documents(raw_documents)
-    chunks = chunk_documents(cleaned_documents, min_length=100, max_length=500)
+    chunks = chunk_documents(cleaned_documents, authors, min_length=100, max_length=500)
     embed_chunks(chunks)
 
 

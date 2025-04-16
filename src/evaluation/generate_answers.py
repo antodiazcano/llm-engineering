@@ -38,7 +38,7 @@ def generate_answers(
 
         Returns
         -------
-        Formated row.
+        Formatted row.
         """
 
         text = f"""Below is an instruction that describes a task. Write a response \
