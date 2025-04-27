@@ -50,7 +50,7 @@ def generate_answers(
         ### Response:
         """
 
-        return re.sub(r"[^\S\n]+", " ", text)  # delete more than one blanck space
+        return re.sub(r"[^\S\n]+", " ", text)  # delete more than one blank space
 
     dataset = load_dataset("csv", data_files=dataset_path, split="train")
     dataset = dataset.map(lambda sample: {"prompt": format_sample(sample)})

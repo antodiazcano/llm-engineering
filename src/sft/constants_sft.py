@@ -2,6 +2,9 @@
 Script to define the hyperparameters used in fine-tuning.
 """
 
+import re
+
+
 # LoRA/QLoRA
 MODEL_NAME = "meta-llama/Llama-3.1-8B"
 MAX_SEQ_LENGTH = 2048
@@ -26,6 +29,7 @@ that appropriately completes the request.
 
 ### Response:
 {}"""
+ALPACA_TEMPLATE = re.sub(r"[^\S\n]+", " ", ALPACA_TEMPLATE)
 
 # Tokenizer
 CHAT_TEMPLATE = "chatml"

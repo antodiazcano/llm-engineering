@@ -51,7 +51,7 @@ def query_expansion(
     response = text[think_pos + len(end_tag) :].strip()
 
     # Give correct format. The regular expression is just eliminating numbers at the
-    # beggining and '\n' at the end of each query.
+    # beginning and '\n' at the end of each query.
     response = [question] + [
         re.sub(r"^\s*\d+\.\s*", "", query).replace("\n", "").strip()
         for query in response.split(separator)

@@ -2,6 +2,9 @@
 Script to define the hyperparameters used in DPO.
 """
 
+import re
+
+
 # LoRA/QLoRA
 MODEL_NAME = "mlabonne/TwinLlama-3.1-8B"
 MAX_SEQ_LENGTH = 2048
@@ -28,6 +31,7 @@ Instruction:
 ###
 Response:
 """
+ALPACA_TEMPLATE = re.sub(r"[^\S\n]+", " ", ALPACA_TEMPLATE)
 
 # Tokenizer
 CHAT_TEMPLATE = "chatml"

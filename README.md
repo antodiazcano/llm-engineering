@@ -1,10 +1,10 @@
 # Summary
 
-This repo contains an adaptation of the code of the book [LLM Engineers Handbook](https://www.amazon.com/LLM-Engineers-Handbook-engineering-production/dp/1836200072/). This is the [repository](https://github.com/PacktPublishing/LLM-Engineers-Handbook).
+This repo contains an adaptation of the code of the book [LLM Engineers Handbook](https://www.amazon.com/LLM-Engineers-Handbook-engineering-production/dp/1836200072/). This is the [official repository](https://github.com/PacktPublishing/LLM-Engineers-Handbook).
 
 It covers a complete LLM project: recollect data, store it into a db, use RAG, fine-tune the model and use it for inference. The two last chapters are not coded because it is the deployment part.
 
-Note that some parts are super simplified, for example training and data collection, but they can be easily extended. The purpose was to learn how to build the complete project, not a perfect LLM.
+Note that some parts are simplified, for example the training and data collection, but they can be easily extended. The purpose was to learn how to build the complete project, not a perfect LLM.
 
 # Requirements
 
